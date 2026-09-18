@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Disclaimer — Redact - Image</title>
+<meta name="description" content="Disclaimer for Redact - Image. A free, non-commercial, hobby project built to learn JavaScript." />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<!-- PWA -->
+<link rel="manifest" href="manifest.json" />
+<meta name="theme-color" content="#111111" />
+<link rel="icon" type="image/png" href="images/icon-192.png" />
+<link rel="apple-touch-icon" href="images/icon-192.png" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="default" />
+<meta name="apple-mobile-web-app-title" content="redact-image" />
+<script>
+  tailwind.config = {
+    theme: {
+      extend: {
+        fontFamily: { sans: ['Inter', 'ui-sans-serif', 'system-ui', 'sans-serif'] },
+      },
+    },
+  };
+</script>
+<script src="https://unpkg.com/lucide@latest"></script>
+<style>
+  html, body { -webkit-tap-highlight-color: transparent; }
+  body { font-feature-settings: 'cv11', 'ss01'; background: #0d0d0d; }
+
+  .grad-bg-d { background-image: linear-gradient(135deg, #ec4899 0%, #a855f7 50%, #6366f1 100%); }
+
+  @media (min-width: 1024px) {
+    ::-webkit-scrollbar { width: 10px; height: 10px; }
+    ::-webkit-scrollbar-track { background: #0d0d0d; }
+    ::-webkit-scrollbar-thumb {
+      background: linear-gradient(180deg, #ec4899 0%, #a855f7 50%, #6366f1 100%);
+      border-radius: 999px;
+      border: 3px solid #0d0d0d;
+      background-clip: padding-box;
+    }
+    ::-webkit-scrollbar-thumb:hover { border-width: 2px; }
+    ::-webkit-scrollbar-corner { background: #0d0d0d; }
+    html { scrollbar-color: #a855f7 #0d0d0d; scrollbar-width: thin; }
+  }
+</style>
+</head>
+<body class="min-h-full font-sans text-white antialiased">
+
+<div class="min-h-full flex flex-col">
+
+  <!-- HEADER -->
+  <header class="px-6 sm:px-8 pt-8 sm:pt-10">
+    <div class="max-w-3xl mx-auto">
+      <a href="./index.html" class="inline-flex items-center gap-2 text-neutral-300 hover:text-white text-sm font-medium transition">
+        <i data-lucide="arrow-left" class="w-4 h-4"></i>
+        Back to Redact - Image
+      </a>
+    </div>
+  </header>
+
+  <!-- CONTENT -->
+  <main class="flex-1 px-6 sm:px-8 py-12 sm:py-16">
+    <div class="max-w-3xl mx-auto">
+
+      <div class="inline-flex items-center gap-2.5 mb-8">
+        <span class="w-4 h-4 sm:w-5 sm:h-5 rounded-[3px] grad-bg-d"></span>
+        <span class="text-[11px] sm:text-xs font-bold tracking-[0.22em] uppercase text-white">Redact - Image</span>
+      </div>
+
+      <h1 class="text-3xl sm:text-4xl md:text-5xl font-extrabold tracking-tight text-white mb-3">
+        Disclaimer
+      </h1>
+      <p class="text-sm text-neutral-400 mb-10">Last updated: this page reflects the current state of the project.</p>
+
+      <div class="space-y-8 text-[15px] leading-relaxed text-neutral-200">
+
+        <!-- HOBBY PROJECT -->
+        <section>
+          <h2 class="text-lg font-bold text-white mb-2">A hobby project</h2>
+          <p>
+            <span class="font-semibold text-white">Redact - Image</span> is a personal hobby project
+            built by an individual developer, primarily as a way to learn and practice
+            JavaScript, browser APIs, and modern web tooling. It is not a company, not a
+            startup, and not a commercial product. There is no team, no business entity,
+            and no revenue behind it.
+          </p>
+        </section>
+
+        <!-- NON-COMMERCIAL -->
+        <section>
+          <h2 class="text-lg font-bold text-white mb-2">Non-commercial and ad-free</h2>
+          <p>
+            The tool is provided entirely free of charge, with no advertising, no sponsored
+            content, no affiliate links, no upsells, and no monetization of any kind. It does
+            not collect payments, does not require sign-up, and does not run on any paid
+            infrastructure beyond free static hosting.
+          </p>
+          <p class="mt-3">
+            There is no interest in user data, no analytics tracking, and no attempt to
+            build an audience or a business. The intent is simply to be useful to anyone who
+            needs to redact an screenshot or image before sharing it.
+          </p>
+        </section>
+
+        <!-- COINCIDENTAL SIMILARITY -->
+        <section>
+          <h2 class="text-lg font-bold text-white mb-2">Names, logos, and design — no affiliation</h2>
+          <p>
+            The name "Redact - Image", the icon marks, the color palette, and the visual
+            design of this site were created independently, from scratch. Any resemblance to any other
+            software, website, service, logo, or trademark — whether in name, styling,
+            layout, color, or iconography — is purely coincidental and unintentional.
+          </p>
+          <p class="mt-3">
+            This project is not affiliated with, endorsed by, sponsored by, or connected to
+            any other company, product, or service. No claim is made to any third-party
+            trademark or brand. If any rights holder believes something here overlaps with
+            their work, please reach out using the contact below and it will be addressed
+            promptly.
+          </p>
+        </section>
+
+        <!-- PROVIDED AS-IS -->
+        <section>
+          <h2 class="text-lg font-bold text-white mb-2">Provided "as is"</h2>
+          <p>
+            The tool is provided as-is, without warranty of any kind, express or implied,
+            including but not limited to warranties of merchantability, fitness for a
+            particular purpose, accuracy, or non-infringement. No guarantee is made that the
+            tool will be available, uninterrupted, error-free, or suitable for any specific
+            use case.
+          </p>
+          <p class="mt-3">
+            The developer is not liable for any direct, indirect, incidental, consequential,
+            or special damages arising from the use of, or inability to use, this tool —
+            including but not limited to unintended disclosure of personal, financial, or
+            confidential information, loss of data, or any other loss.
+          </p>
+        </section>
+
+        <!-- USER RESPONSIBILITY -->
+        <section>
+          <h2 class="text-lg font-bold text-white mb-2">Your responsibility</h2>
+          <p>
+            You are solely responsible for verifying that any sensitive information has been
+            properly redacted before sharing any image produced by this tool. You are also
+            responsible for ensuring that your use of the tool complies with all applicable
+            laws in your jurisdiction, and that you have the right to edit and share any
+            image you upload.
+          </p>
+        </section>
+
+        <!-- PRIVACY -->
+        <section>
+          <h2 class="text-lg font-bold text-white mb-2">Privacy</h2>
+          <p>
+            All image processing happens entirely within your browser. No images, edits,
+            metadata, or usage data are uploaded to any server. There is no backend, no
+            database, and no logging of user activity. When you close the tab, nothing
+            remains anywhere but on your own device.
+          </p>
+          <p class="mt-3">
+            The site loads a few third-party resources — Tailwind CSS, Lucide icons, and the
+            Inter font, all via CDN. Those requests are subject to the respective providers'
+            own privacy policies, but no user content ever passes through them.
+          </p>
+        </section>
+
+        <!-- CONTACT -->
+        <section>
+          <h2 class="text-lg font-bold text-white mb-2">Contact</h2>
+          <p>
+            Questions, concerns, corrections, or takedown requests are all welcome. Reach
+            out at:
+          </p>
+          <p class="mt-3">
+            <a href="mailto:contact.ydivde@gmail.com"
+               class="inline-flex items-center gap-2 text-white font-semibold underline-offset-4 hover:underline">
+              <i data-lucide="mail" class="w-4 h-4"></i>
+              contact.ydivde@gmail.com
+            </a>
+          </p>
+        </section>
+
+        <!-- ACCEPTANCE -->
+        <section class="pt-4 border-t border-neutral-800">
+          <p class="text-sm text-neutral-400">
+            By using Redact - Image, you acknowledge that you have read and understood this
+            disclaimer and agree to its terms.
+          </p>
+        </section>
+
+      </div>
+
+      <!-- Back link at bottom -->
+      <div class="mt-12 pt-8 border-t border-neutral-800">
+        <a href="./index.html" class="inline-flex items-center gap-2 text-neutral-300 hover:text-white text-sm font-medium transition">
+          <i data-lucide="arrow-left" class="w-4 h-4"></i>
+          Back to Redact - Image
+        </a>
+      </div>
+
+    </div>
+  </main>
+
+  <!-- FOOTER -->
+  <footer class="border-t border-neutral-900">
+    <div class="max-w-3xl mx-auto px-6 sm:px-8 py-8 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-neutral-400">
+      <div class="flex items-center gap-2">
+        <span class="w-3.5 h-3.5 rounded-[2px] grad-bg-d"></span>
+        <span class="font-semibold text-neutral-200">Redact - Image</span>
+      </div>
+      <div class="text-center sm:text-right">
+        Made by <span class="text-neutral-200 font-semibold">Yasir Divde</span>
+      </div>
+    </div>
+  </footer>
+
+</div>
+
+<script>lucide.createIcons();</script>
+<script>
+    if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("./service-worker.js")
+      .then(registration => {
+        console.log("Service Worker registered:", registration.scope);
+      })
+      .catch(error => {
+        console.error("Service Worker registration failed:", error);
+      });
+  });
+}
+</script> 
+</body>
+</html>

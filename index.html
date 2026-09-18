@@ -1,0 +1,782 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Redact - Image — Free & Private Image Redaction</title>
+<meta name="description" content="The fastest way to censor sensitive information online. All editing happens in your browser. We don't upload any data." />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<!-- PWA -->
+<link rel="manifest" href="manifest.json" />
+<meta name="theme-color" content="#111111" />
+<link rel="icon" type="image/png" href="images/icon-192.png" />
+<link rel="apple-touch-icon" href="images/icon-192.png" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="default" />
+<meta name="apple-mobile-web-app-title" content="redact-image" />
+<script>
+  tailwind.config = {
+    theme: {
+      extend: {
+        fontFamily: { sans: ['Inter', 'ui-sans-serif', 'system-ui', 'sans-serif'] },
+        screens: { 'xs': '400px' },
+      },
+    },
+  };
+</script>
+<script src="https://unpkg.com/lucide@latest"></script>
+<style>
+  html, body { -webkit-tap-highlight-color: transparent; }
+  body { font-feature-settings: 'cv11', 'ss01'; background: #0d0d0d; }
+
+  .grad-bg   { background-image: linear-gradient(90deg, #ec4899 0%, #a855f7 50%, #6366f1 100%); }
+  .grad-bg-d { background-image: linear-gradient(135deg, #ec4899 0%, #a855f7 50%, #6366f1 100%); }
+  .grad-text { background-image: linear-gradient(90deg, #ec4899 0%, #a855f7 50%, #6366f1 100%); -webkit-background-clip: text; background-clip: text; color: transparent; }
+
+  @media (min-width: 1024px) {
+    ::-webkit-scrollbar { width: 10px; height: 10px; }
+    ::-webkit-scrollbar-track { background: #0d0d0d; }
+    ::-webkit-scrollbar-thumb {
+      background: linear-gradient(180deg, #ec4899 0%, #a855f7 50%, #6366f1 100%);
+      border-radius: 999px;
+      border: 3px solid #0d0d0d;
+      background-clip: padding-box;
+      transition: border-color 0.15s;
+    }
+    ::-webkit-scrollbar-thumb:hover { border-width: 2px; }
+    ::-webkit-scrollbar-corner { background: #0d0d0d; }
+    html {
+      scrollbar-color: #a855f7 #0d0d0d;
+      scrollbar-width: thin;
+    }
+  }
+
+  .slider {
+    width: 100%; height: 24px;
+    -webkit-appearance: none; appearance: none;
+    background: transparent; outline: none; cursor: pointer;
+    padding: 0; margin: 0; display: block;
+  }
+  .slider::-webkit-slider-runnable-track { height: 6px; background: #262626; border-radius: 3px; }
+  .slider::-webkit-slider-thumb {
+    -webkit-appearance: none; appearance: none;
+    width: 20px; height: 20px; border-radius: 50%;
+    background: #fafafa; cursor: pointer;
+    border: none; box-shadow: 0 2px 6px rgba(0,0,0,0.5);
+    margin-top: -7px;
+  }
+  .slider::-moz-range-track { height: 6px; background: #262626; border-radius: 3px; }
+  .slider::-moz-range-thumb {
+    width: 20px; height: 20px; border-radius: 50%;
+    background: #fafafa; cursor: pointer;
+    border: none; box-shadow: 0 2px 6px rgba(0,0,0,0.5);
+  }
+
+  .slider-mobile {
+    width: 100%; height: 22px;
+    -webkit-appearance: none; appearance: none;
+    background: transparent; outline: none; cursor: pointer;
+    padding: 0; margin: 0; display: block;
+  }
+  .slider-mobile::-webkit-slider-runnable-track { height: 6px; background: #262626; border-radius: 3px; }
+  .slider-mobile::-webkit-slider-thumb {
+    -webkit-appearance: none; appearance: none;
+    width: 18px; height: 18px; border-radius: 50%;
+    background: #fafafa; cursor: pointer;
+    border: none; box-shadow: 0 2px 6px rgba(0,0,0,0.5);
+    margin-top: -6px;
+  }
+  .slider-mobile::-moz-range-track { height: 6px; background: #262626; border-radius: 3px; }
+  .slider-mobile::-moz-range-thumb {
+    width: 18px; height: 18px; border-radius: 50%;
+    background: #fafafa; cursor: pointer;
+    border: none; box-shadow: 0 2px 6px rgba(0,0,0,0.5);
+  }
+
+  .tool-chip {
+    display: inline-flex; align-items: center; gap: 0.375rem;
+    padding: 0.5rem 0.75rem; border-radius: 0.5rem;
+    border: 1px solid #262626; background: #171717; color: #e5e5e5;
+    font-size: 0.75rem; font-weight: 600; line-height: 1;
+    transition: all 0.15s; white-space: nowrap; cursor: pointer;
+  }
+  .tool-chip[aria-pressed="true"] {
+    background-image: linear-gradient(90deg, #ec4899 0%, #a855f7 50%, #6366f1 100%);
+    color: white; border-color: transparent;
+    box-shadow: 0 4px 16px -4px rgba(168,85,247,0.5);
+  }
+  .tool-chip:disabled { opacity: 0.35; cursor: not-allowed; }
+  .tool-chip.icon-only { padding: 0.5rem; }
+
+  .tool-btn {
+    display: flex; flex-direction: column; align-items: center; gap: 0.375rem;
+    padding: 0.625rem 0.5rem; border-radius: 0.5rem;
+    border: 1px solid #262626; background: #171717; color: #e5e5e5;
+    font-size: 0.75rem; font-weight: 600; line-height: 1;
+    transition: all 0.15s; cursor: pointer;
+  }
+  .tool-btn[aria-pressed="true"] {
+    background-image: linear-gradient(135deg, #ec4899 0%, #a855f7 50%, #6366f1 100%);
+    color: white; border-color: transparent;
+    box-shadow: 0 4px 16px -4px rgba(168,85,247,0.5);
+  }
+  .tool-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+
+  .color-swatch {
+    width: 100%; aspect-ratio: 1 / 1; border-radius: 8px;
+    box-shadow: inset 0 0 0 1px rgba(255,255,255,0.12);
+    transition: all 0.15s; cursor: pointer; position: relative;
+  }
+  .color-swatch.active {
+    box-shadow: inset 0 0 0 2px #0d0d0d, 0 0 0 2px #ffffff, 0 0 0 4px rgba(168,85,247,0.5);
+  }
+  .swatch-sm {
+    width: 100%; aspect-ratio: 1 / 1; border-radius: 7px;
+    box-shadow: inset 0 0 0 1px rgba(255,255,255,0.12);
+    transition: all 0.15s; cursor: pointer; position: relative;
+  }
+  .swatch-sm.active {
+    box-shadow: inset 0 0 0 2px #0d0d0d, 0 0 0 2px #ffffff, 0 0 0 3px rgba(168,85,247,0.5);
+  }
+  .color-swatch-add, .swatch-sm-add {
+    position: relative; display: grid; place-items: center;
+    border-radius: 8px; border: 1.5px dashed #404040;
+    background: #171717; color: #a3a3a3;
+    cursor: pointer; transition: all 0.15s; overflow: hidden;
+    aspect-ratio: 1 / 1; width: 100%;
+  }
+  .swatch-sm-add { border-radius: 7px; }
+  .color-swatch-add:hover, .swatch-sm-add:hover { border-color: #a855f7; color: #fafafa; }
+  .color-swatch-add.pipette, .swatch-sm-add.pipette {
+    border-style: solid; border-color: #262626; color: #fafafa;
+  }
+  [data-custom-color-label].active {
+    box-shadow: 0 0 0 2px #ffffff, 0 0 0 4px rgba(168,85,247,0.5);
+    border-color: transparent;
+  }
+
+  .zoom-btn {
+    width: 2rem; height: 2rem; border-radius: 0.5rem;
+    display: grid; place-items: center;
+    color: #e5e5e5; transition: all 0.15s;
+    cursor: pointer; background: transparent; border: none;
+  }
+  .zoom-btn:hover { background: #262626; color: white; }
+
+  .safe-bottom { padding-bottom: env(safe-area-inset-bottom, 0); }
+  input[type="range"] { -webkit-tap-highlight-color: transparent; }
+
+  #btnZoom[aria-pressed="true"] {
+    background-image: linear-gradient(90deg, #ec4899 0%, #a855f7 50%, #6366f1 100%);
+    color: white; border-color: transparent;
+    box-shadow: 0 4px 16px -4px rgba(168,85,247,0.5);
+  }
+
+  body.zoom-active [data-tool],
+  body.zoom-active [data-brush],
+  body.zoom-active [data-blur],
+  body.zoom-active [data-mosaic],
+  body.zoom-active [data-color],
+  body.zoom-active [data-custom-color],
+  body.zoom-active [data-eyedropper],
+  body.zoom-active [data-undo],
+  body.zoom-active [data-redo],
+  body.zoom-active [data-reset],
+  body.zoom-active #btnNew {
+    opacity: 0.35;
+    pointer-events: none;
+  }
+
+  #landingDropZone { transition: border-color 0.15s, background-color 0.15s, transform 0.15s, box-shadow 0.25s; }
+  #landingDropZone:hover {
+    border-color: #a855f7;
+    background-color: rgba(168,85,247,0.05);
+    box-shadow: 0 20px 60px -20px rgba(168,85,247,0.35);
+  }
+  #landingDropZone.drag-over {
+    border-color: #a855f7;
+    background-color: rgba(168,85,247,0.10);
+    transform: scale(1.01);
+  }
+</style>
+</head>
+<body class="h-full font-sans text-white antialiased">
+
+<!-- =================== LANDING =================== -->
+<div id="landingView" class="min-h-full flex flex-col">
+
+  <!-- HERO -->
+  <section class="relative overflow-hidden px-6 sm:px-8 pt-12 sm:pt-16 lg:pt-20 pb-10 sm:pb-12 lg:pb-16">
+
+    <div class="absolute -top-32 -right-32 w-[520px] h-[520px] rounded-full pointer-events-none"
+         style="background: radial-gradient(circle, rgba(168,85,247,0.10), transparent 65%);"></div>
+    <div class="absolute -bottom-40 -left-40 w-[480px] h-[480px] rounded-full pointer-events-none"
+         style="background: radial-gradient(circle, rgba(99,102,241,0.08), transparent 65%);"></div>
+
+    <div class="max-w-4xl mx-auto relative">
+      <div class="grid lg:grid-cols-[1.15fr_1fr] gap-10 lg:gap-12 xl:gap-14 items-center">
+
+        <div class="text-center lg:text-left">
+
+          <div class="inline-flex items-center gap-2.5 mb-8 sm:mb-10">
+            <span class="w-4 h-4 sm:w-5 sm:h-5 rounded-[3px] grad-bg-d"></span>
+            <span class="text-[11px] sm:text-xs font-bold tracking-[0.22em] uppercase text-white">Redact - Image</span>
+          </div>
+
+          <h1 class="font-extrabold tracking-tight text-white
+                     text-[2.4rem] leading-[1.08]
+                     xs:text-5xl
+                     sm:text-6xl
+                     lg:text-[2.6rem] lg:leading-[1.1]
+                     xl:text-[3rem] xl:leading-[1.08]
+                     2xl:text-[3.25rem]">
+            Free And Private<br />
+            <span class="relative inline-block">
+              <span class="relative z-10">Image Redaction</span>
+              <span class="absolute left-0 right-0 -bottom-1 lg:-bottom-1.5 h-[0.12em] grad-bg rounded-[2px]"></span>
+            </span><br />
+            In The Browser
+          </h1>
+
+          <p class="mt-8 sm:mt-10 text-base sm:text-lg lg:text-lg xl:text-xl text-white font-medium max-w-xl mx-auto lg:mx-0">
+            The fastest way to censor sensitive information online.
+          </p>
+
+          <p class="mt-5 sm:mt-6 text-sm sm:text-base text-neutral-100 max-w-lg mx-auto lg:mx-0 leading-relaxed">
+            All editing happens in your browser.<br />
+            We don't upload any data. <span class="grad-text font-semibold">100% Free ✨</span>
+          </p>
+        </div>
+
+        <div class="relative">
+          <div class="absolute -inset-6 rounded-[2rem] pointer-events-none"
+               style="background: radial-gradient(circle at 50% 50%, rgba(168,85,247,0.14), transparent 60%); filter: blur(20px);"></div>
+
+          <label for="fileInput" id="landingDropZone"
+            class="relative block cursor-pointer rounded-3xl border-2 border-dashed border-neutral-700 bg-neutral-900/50 backdrop-blur-sm px-6 sm:px-8 py-10 sm:py-12 text-center">
+            <div class="pointer-events-none mx-auto w-14 h-14 sm:w-16 sm:h-16 rounded-2xl grad-bg-d grid place-items-center mb-5 shadow-lg shadow-purple-500/30">
+              <i data-lucide="image-plus" class="w-6 h-6 sm:w-7 sm:h-7 text-white"></i>
+            </div>
+            <h3 class="text-base sm:text-lg font-bold text-white">Drop your image here</h3>
+            <p class="text-sm text-neutral-100 mt-1 mb-6">or paste with Ctrl+V</p>
+            <span class="inline-flex items-center px-7 sm:px-8 py-3 sm:py-3.5 bg-white text-neutral-900 rounded-full font-semibold text-sm sm:text-base shadow-lg shadow-black/40">
+              Select Photo
+            </span>
+          </label>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- HOW DOES IT WORK -->
+  <section class="px-6 sm:px-8 pt-10 sm:pt-12 lg:pt-14 pb-16 sm:pb-20">
+    <div class="max-w-4xl mx-auto text-center">
+      <h2 class="inline-block relative text-3xl sm:text-4xl md:text-5xl font-extrabold tracking-tight text-white">
+        How Does It Work?
+        <span class="absolute left-0 right-0 -bottom-1.5 sm:-bottom-2 h-1 sm:h-1.5 grad-bg rounded-[2px]"></span>
+      </h2>
+
+      <div class="mt-12 sm:mt-14 grid sm:grid-cols-3 gap-10 sm:gap-8 text-left sm:text-center">
+
+        <div>
+          <div class="w-11 h-11 rounded-2xl grad-bg-d grid place-items-center text-white font-bold text-lg shadow-lg shadow-purple-500/20 mb-4 sm:mx-auto">1</div>
+          <h3 class="text-lg font-bold text-white">Drop or paste</h3>
+          <p class="mt-2 text-sm text-neutral-100 leading-relaxed">Drag a screenshot in, paste from clipboard, or pick a file. Any common image works.</p>
+        </div>
+
+        <div>
+          <div class="w-11 h-11 rounded-2xl grad-bg-d grid place-items-center text-white font-bold text-lg shadow-lg shadow-purple-500/20 mb-4 sm:mx-auto">2</div>
+          <h3 class="text-lg font-bold text-white">Redact</h3>
+          <p class="mt-2 text-sm text-neutral-100 leading-relaxed">Brush over anything private — blur, mosaic, or solid bars. Zoom for precision.</p>
+        </div>
+
+        <div>
+          <div class="w-11 h-11 rounded-2xl grad-bg-d grid place-items-center text-white font-bold text-lg shadow-lg shadow-purple-500/20 mb-4 sm:mx-auto">3</div>
+          <h3 class="text-lg font-bold text-white">Export</h3>
+          <p class="mt-2 text-sm text-neutral-100 leading-relaxed">Save as PNG, JPEG, or WebP. Copy to clipboard on desktop.</p>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- FEATURES -->
+  <section class="px-6 sm:px-8 py-16 sm:py-20 border-t border-neutral-900">
+    <div class="max-w-4xl mx-auto">
+      <div class="text-center mb-12 sm:mb-14">
+        <h2 class="text-2xl sm:text-3xl md:text-4xl font-extrabold tracking-tight text-white">Three ways to hide.</h2>
+        <p class="mt-3 text-sm sm:text-base text-neutral-100">Whatever you need to keep private, there's a tool for it.</p>
+      </div>
+
+      <div class="grid sm:grid-cols-3 gap-4 sm:gap-5">
+        <div class="rounded-2xl border border-neutral-800 bg-neutral-900/50 p-6 hover:border-neutral-700 transition">
+          <div class="w-11 h-11 rounded-xl bg-neutral-800 grid place-items-center mb-5">
+            <i data-lucide="wind" class="w-5 h-5 text-white"></i>
+          </div>
+          <h3 class="text-base font-bold text-white">Blur</h3>
+          <p class="mt-2 text-sm text-neutral-100 leading-relaxed">Soften sensitive areas with adjustable intensity. Perfect for background details.</p>
+        </div>
+
+        <div class="rounded-2xl border border-neutral-800 bg-neutral-900/50 p-6 hover:border-neutral-700 transition">
+          <div class="w-11 h-11 rounded-xl bg-neutral-800 grid place-items-center mb-5">
+            <i data-lucide="grid-3x3" class="w-5 h-5 text-white"></i>
+          </div>
+          <h3 class="text-base font-bold text-white">Mosaic</h3>
+          <p class="mt-2 text-sm text-neutral-100 leading-relaxed">Pixelate text, faces, and anything else for the classic censor look.</p>
+        </div>
+
+        <div class="rounded-2xl border border-neutral-800 bg-neutral-900/50 p-6 hover:border-neutral-700 transition">
+          <div class="w-11 h-11 rounded-xl bg-neutral-800 grid place-items-center mb-5">
+            <i data-lucide="square" class="w-5 h-5 text-white"></i>
+          </div>
+          <h3 class="text-base font-bold text-white">Solid bars</h3>
+          <p class="mt-2 text-sm text-neutral-100 leading-relaxed">Cover anything with clean color blocks. Choose any color — even sample it from the image.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer class="border-t border-neutral-900 mt-auto">
+    <div class="max-w-4xl mx-auto px-6 sm:px-8 py-8 space-y-4 text-sm">
+
+      <div class="flex flex-col sm:flex-row items-center justify-between gap-3">
+        <div class="flex items-center gap-2.5 text-neutral-200">
+          <span class="w-4 h-4 rounded-[3px] grad-bg-d"></span>
+          <span class="font-semibold text-white">Redact - Image</span>
+        </div>
+        <div class="flex items-center gap-2 text-xs text-neutral-300">
+          <i data-lucide="shield-check" class="w-3.5 h-3.5 text-emerald-500"></i>
+          <span>Runs entirely in your browser</span>
+        </div>
+      </div>
+
+      <div class="flex flex-col sm:flex-row items-center justify-between gap-3 pt-3 border-t border-neutral-900 text-xs">
+        <div class="text-neutral-300">
+          Made by <span class="text-white font-semibold">Yasir Divde</span>
+        </div>
+        <div class="flex items-center gap-4">
+          <a href="./Disclaimer.html" class="text-neutral-300 hover:text-white underline-offset-2 hover:underline transition">
+            Disclaimer
+          </a>
+        </div>
+      </div>
+
+    </div>
+  </footer>
+</div>
+
+<!-- =================== APP (EDIT) =================== -->
+<div id="appView" class="hidden h-[100dvh] flex-col bg-neutral-950">
+
+  <header class="shrink-0 bg-neutral-900 border-b border-neutral-800 z-20">
+    <div class="h-14 px-2 sm:px-4 flex items-center justify-between gap-2">
+      <button id="btnHome" class="flex items-center gap-2 shrink-0 rounded-lg px-1 py-1 hover:bg-neutral-800 transition" title="Home">
+        <span class="w-8 h-8 rounded-lg grad-bg-d grid place-items-center">
+          <i data-lucide="eye-off" class="w-4 h-4 text-white"></i>
+        </span>
+        <span class="font-bold text-white tracking-tight">Redact - Image</span>
+      </button>
+
+      <div class="hidden md:flex items-center gap-1.5 text-xs font-medium text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 rounded-full px-3 py-1">
+        <i data-lucide="shield-check" class="w-3.5 h-3.5"></i>
+        <span>Nothing leaves your device</span>
+      </div>
+
+      <div class="flex items-center gap-1.5 shrink-0">
+        <button id="btnNew" class="inline-flex items-center gap-1.5 border border-neutral-700 hover:bg-neutral-800 text-white text-sm font-semibold rounded-lg px-2 sm:px-3 py-2 transition">
+          <i data-lucide="image-plus" class="w-4 h-4"></i>
+          <span class="hidden sm:inline">New</span>
+        </button>
+        <button id="btnZoom" aria-pressed="false" disabled
+          class="inline-flex items-center gap-1.5 border border-neutral-700 hover:bg-neutral-800 text-white text-sm font-semibold rounded-lg px-2 sm:px-3 py-2 transition disabled:opacity-40 disabled:cursor-not-allowed">
+          <i data-lucide="maximize-2" class="w-4 h-4"></i>
+          <span class="hidden sm:inline">Zoom</span>
+        </button>
+        <button id="btnDone" disabled
+          class="inline-flex items-center gap-1.5 grad-bg disabled:bg-neutral-800 disabled:bg-none disabled:text-neutral-500 disabled:cursor-not-allowed text-white text-sm font-semibold rounded-lg px-3 py-2 transition shadow-lg shadow-purple-500/20">
+          <i data-lucide="arrow-right" class="w-4 h-4"></i>
+          <span class="hidden sm:inline">Done</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <div class="flex-1 min-h-0 flex flex-col lg:flex-row">
+
+    <!-- MOBILE TOOLS STRIP -->
+    <div class="lg:hidden shrink-0 bg-neutral-900 border-b border-neutral-800">
+      <div class="flex items-center gap-1.5 px-2 py-2 overflow-x-auto no-scrollbar">
+        <button data-tool="blur" aria-pressed="false" class="tool-chip">
+          <i data-lucide="wind" class="w-4 h-4"></i><span>Blur</span>
+        </button>
+        <button data-tool="mosaic" aria-pressed="false" class="tool-chip">
+          <i data-lucide="grid-3x3" class="w-4 h-4"></i><span>Mosaic</span>
+        </button>
+        <button data-tool="solid" aria-pressed="false" class="tool-chip">
+          <i data-lucide="square" class="w-4 h-4"></i><span>Solid</span>
+        </button>
+        <div class="w-px h-6 bg-neutral-700 mx-1 shrink-0"></div>
+        <button data-undo class="tool-chip icon-only" title="Undo" disabled><i data-lucide="undo-2" class="w-4 h-4"></i></button>
+        <button data-redo class="tool-chip icon-only" title="Redo" disabled><i data-lucide="redo-2" class="w-4 h-4"></i></button>
+        <button data-reset class="tool-chip icon-only" title="Clear" disabled><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+      </div>
+    </div>
+
+    <!-- DESKTOP SIDEBAR -->
+    <aside class="hidden lg:flex lg:flex-col lg:w-72 shrink-0 bg-neutral-900 border-r border-neutral-800 lg:overflow-y-auto">
+      <div class="p-4 space-y-6">
+
+        <section>
+          <h2 class="text-xs font-bold uppercase tracking-wider text-neutral-300 mb-3">Tools</h2>
+          <div class="grid grid-cols-3 gap-2">
+            <button data-tool="blur" aria-pressed="false" class="tool-btn">
+              <i data-lucide="wind" class="w-5 h-5"></i><span>Blur</span>
+            </button>
+            <button data-tool="mosaic" aria-pressed="false" class="tool-btn">
+              <i data-lucide="grid-3x3" class="w-5 h-5"></i><span>Mosaic</span>
+            </button>
+            <button data-tool="solid" aria-pressed="false" class="tool-btn">
+              <i data-lucide="square" class="w-5 h-5"></i><span>Solid</span>
+            </button>
+          </div>
+        </section>
+
+        <section>
+          <h2 class="text-xs font-bold uppercase tracking-wider text-neutral-300 mb-3">Adjust</h2>
+
+          <div data-adjust-empty class="rounded-xl border border-dashed border-neutral-700 bg-neutral-950/50 px-3 py-4 text-center">
+            <p class="text-xs text-neutral-300">Pick a tool above to adjust its settings.</p>
+          </div>
+
+          <div data-adjust-content class="hidden space-y-5">
+            <div data-brush-group class="hidden">
+              <div class="flex items-center justify-between mb-2">
+                <label class="text-sm font-semibold text-white">Brush size</label>
+                <span data-brush-value class="text-xs font-mono font-bold text-white tabular-nums bg-neutral-800 px-2 py-1 rounded">20px</span>
+              </div>
+              <input data-brush type="range" min="6" max="120" step="1" value="20" class="slider" />
+            </div>
+
+            <div data-blur-group class="hidden">
+              <div class="flex items-center justify-between mb-2">
+                <label class="text-sm font-semibold text-white">Blur strength</label>
+                <span data-blur-value class="text-xs font-mono font-bold text-white tabular-nums bg-neutral-800 px-2 py-1 rounded">8</span>
+              </div>
+              <input data-blur type="range" min="2" max="40" step="1" value="8" class="slider" />
+              <p data-blur-warning class="hidden text-[11px] text-amber-400 leading-snug mt-2">
+                ⚠️ Low strength can't fully hide text or faces. Increase for stronger redaction.
+              </p>
+            </div>
+
+            <div data-mosaic-group class="hidden">
+              <div class="flex items-center justify-between mb-2">
+                <label class="text-sm font-semibold text-white">Pixel size</label>
+                <span data-mosaic-value class="text-xs font-mono font-bold text-white tabular-nums bg-neutral-800 px-2 py-1 rounded">12</span>
+              </div>
+              <input data-mosaic type="range" min="4" max="60" step="1" value="12" class="slider" />
+              <p data-mosaic-warning class="hidden text-[11px] text-amber-400 leading-snug mt-2">
+                ⚠️ Small pixel size can't fully hide text or faces. Increase for stronger redaction.
+              </p>
+            </div>
+
+            <div data-color-group class="hidden">
+              <div class="flex items-center justify-between mb-3">
+                <label class="text-sm font-semibold text-white">Bar color</label>
+                <div class="flex items-center gap-1.5">
+                  <span class="text-[10px] font-bold text-neutral-300 uppercase tracking-wider">Current</span>
+                  <span data-current-color-tile class="w-6 h-6 rounded-md ring-2 ring-neutral-700 shadow-inner transition" style="background:#000000"></span>
+                </div>
+              </div>
+              <div class="grid grid-cols-6 gap-2">
+                <button data-color="#000000" class="color-swatch" style="background:#000000" aria-label="Black"></button>
+                <button data-color="#ffffff" class="color-swatch" style="background:#ffffff" aria-label="White"></button>
+                <button data-color="#ef4444" class="color-swatch" style="background:#ef4444" aria-label="Red"></button>
+                <button data-color="#2563eb" class="color-swatch" style="background:#2563eb" aria-label="Blue"></button>
+                <label class="color-swatch-add" data-custom-color-label title="Custom color">
+                  <input data-custom-color type="color" value="#000000" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" />
+                  <span data-custom-color-fill class="absolute inset-0 rounded-md" style="background: conic-gradient(from 0deg, #ef4444, #f59e0b, #22c55e, #06b6d4, #3b82f6, #a855f7, #ef4444);"></span>
+                  <span class="relative grid place-items-center">
+                    <i data-lucide="plus" class="w-4 h-4 pointer-events-none text-white" style="filter: drop-shadow(0 1px 1px rgba(0,0,0,0.7));"></i>
+                  </span>
+                </label>
+                <button type="button" data-eyedropper class="color-swatch-add pipette" title="Pick color from image">
+                  <i data-lucide="pipette" class="w-4 h-4 pointer-events-none"></i>
+                </button>
+              </div>
+              <p class="text-[11px] text-neutral-300 mt-2 leading-snug">Tap the pipette then click the image to sample its color.</p>
+            </div>
+          </div>
+        </section>
+
+        <section>
+          <h2 class="text-xs font-bold uppercase tracking-wider text-neutral-300 mb-3">History</h2>
+          <div class="grid grid-cols-3 gap-2">
+            <button data-undo class="tool-btn" disabled>
+              <i data-lucide="undo-2" class="w-4 h-4"></i><span>Undo</span>
+            </button>
+            <button data-redo class="tool-btn" disabled>
+              <i data-lucide="redo-2" class="w-4 h-4"></i><span>Redo</span>
+            </button>
+            <button data-reset class="tool-btn" disabled>
+              <i data-lucide="trash-2" class="w-4 h-4"></i><span>Clear</span>
+            </button>
+          </div>
+        </section>
+
+        <p class="text-xs text-neutral-300 leading-relaxed border-t border-neutral-800 pt-4">
+          <i data-lucide="lock" class="w-3 h-3 inline -mt-0.5 mr-1"></i>
+          Images are processed in your browser and never uploaded.
+        </p>
+      </div>
+    </aside>
+
+    <!-- CANVAS AREA -->
+    <main class="flex-1 min-h-0 flex flex-col">
+      <div class="flex-1 min-h-0 relative bg-[#0a0a0a]">
+
+        <div id="emptyState" class="absolute inset-0 flex items-center justify-center p-4">
+          <div id="dropZone" class="w-full max-w-md rounded-2xl border-2 border-dashed border-neutral-700 bg-neutral-900/60 px-6 sm:px-8 py-8 sm:py-12 text-center transition hover:border-purple-500/60 hover:bg-neutral-900 cursor-pointer">
+            <div class="mx-auto w-14 h-14 rounded-2xl grad-bg-d grid place-items-center mb-4 shadow-lg shadow-purple-500/30">
+              <i data-lucide="image-plus" class="w-6 h-6 text-white"></i>
+            </div>
+            <h3 class="text-base sm:text-lg font-bold text-white">Drop a screenshot</h3>
+            <p class="text-sm text-neutral-100 mt-1">or paste from clipboard, or click to browse</p>
+            <button type="button" id="btnChoose" class="mt-5 inline-flex items-center gap-2 grad-bg text-white text-sm font-semibold rounded-lg px-5 py-2.5 transition shadow-lg shadow-purple-500/20">
+              <i data-lucide="upload" class="w-4 h-4"></i>
+              Choose image
+            </button>
+            <p class="text-xs text-neutral-300 mt-4">PNG, JPEG, WebP</p>
+          </div>
+        </div>
+
+        <div id="canvasWrap" class="hidden absolute inset-0 overflow-hidden">
+          <div class="absolute inset-0 flex items-center justify-center p-3 sm:p-6">
+            <canvas id="canvas" class="block touch-none select-none shadow-2xl shadow-black/80 ring-1 ring-neutral-800 bg-white" style="will-change: transform;"></canvas>
+          </div>
+
+          <div id="zoomControls" class="hidden absolute top-3 right-3 z-20 bg-neutral-900/95 backdrop-blur rounded-xl shadow-2xl shadow-black/60 border border-neutral-800 p-1 items-center gap-0.5">
+            <button data-zoom-out class="zoom-btn" title="Zoom out"><i data-lucide="zoom-out" class="w-4 h-4 pointer-events-none"></i></button>
+            <span data-zoom-level class="text-xs font-bold text-white px-2 tabular-nums text-center" style="min-width:3rem;">100%</span>
+            <button data-zoom-in class="zoom-btn" title="Zoom in"><i data-lucide="zoom-in" class="w-4 h-4 pointer-events-none"></i></button>
+            <div class="w-px h-5 bg-neutral-700 mx-0.5"></div>
+            <button data-zoom-fit class="zoom-btn" title="Reset to fit"><i data-lucide="frame" class="w-4 h-4 pointer-events-none"></i></button>
+          </div>
+        </div>
+      </div>
+
+      <!-- MOBILE BOTTOM PANEL -->
+      <div class="lg:hidden shrink-0 bg-neutral-900 border-t border-neutral-800 safe-bottom">
+
+        <div data-adjust-empty class="px-3 py-2.5 text-center">
+          <p class="text-[11px] text-neutral-300">Choose a tool above to adjust its settings</p>
+        </div>
+
+        <div data-adjust-content class="hidden px-3 pt-2.5 pb-3">
+
+          <div data-brush-group class="hidden">
+            <div class="flex items-center justify-between mb-1.5">
+              <label class="text-xs font-semibold text-white">Brush size</label>
+              <span data-brush-value class="text-[11px] font-mono font-bold text-white bg-neutral-800 px-2 py-0.5 rounded tabular-nums">20px</span>
+            </div>
+            <input data-brush type="range" min="6" max="120" step="1" value="20" class="slider-mobile" />
+          </div>
+
+          <div data-blur-group class="hidden">
+            <div class="flex items-center justify-between mb-1.5">
+              <label class="text-xs font-semibold text-white">Blur strength</label>
+              <span data-blur-value class="text-[11px] font-mono font-bold text-white bg-neutral-800 px-2 py-0.5 rounded tabular-nums">8</span>
+            </div>
+            <input data-blur type="range" min="2" max="40" step="1" value="8" class="slider-mobile" />
+            <p data-blur-warning class="hidden text-[10px] text-amber-400 leading-snug mt-1.5">
+              ⚠️ Low strength can't fully hide text or faces.
+            </p>
+          </div>
+
+          <div data-mosaic-group class="hidden">
+            <div class="flex items-center justify-between mb-1.5">
+              <label class="text-xs font-semibold text-white">Pixel size</label>
+              <span data-mosaic-value class="text-[11px] font-mono font-bold text-white bg-neutral-800 px-2 py-0.5 rounded tabular-nums">12</span>
+            </div>
+            <input data-mosaic type="range" min="4" max="60" step="1" value="12" class="slider-mobile" />
+            <p data-mosaic-warning class="hidden text-[10px] text-amber-400 leading-snug mt-1.5">
+              ⚠️ Small pixel size can't fully hide text or faces.
+            </p>
+          </div>
+
+          <div data-color-group class="hidden">
+            <div class="flex items-center justify-between mb-1.5">
+              <label class="text-xs font-semibold text-white">Bar color</label>
+              <div class="flex items-center gap-1.5">
+                <span class="text-[10px] font-bold text-neutral-300 uppercase tracking-wider">Current</span>
+                <span data-current-color-tile class="w-5 h-5 rounded-md ring-2 ring-neutral-700 shadow-inner" style="background:#000000"></span>
+              </div>
+            </div>
+            <div class="grid grid-cols-6 gap-1.5">
+              <button data-color="#000000" class="swatch-sm" style="background:#000000" aria-label="Black"></button>
+              <button data-color="#ffffff" class="swatch-sm" style="background:#ffffff" aria-label="White"></button>
+              <button data-color="#ef4444" class="swatch-sm" style="background:#ef4444" aria-label="Red"></button>
+              <button data-color="#2563eb" class="swatch-sm" style="background:#2563eb" aria-label="Blue"></button>
+              <label class="swatch-sm-add" data-custom-color-label title="Custom color">
+                <input data-custom-color type="color" value="#000000" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" />
+                <span data-custom-color-fill class="absolute inset-0 rounded-md" style="background: conic-gradient(from 0deg, #ef4444, #f59e0b, #22c55e, #06b6d4, #3b82f6, #a855f7, #ef4444);"></span>
+                <span class="relative grid place-items-center">
+                  <i data-lucide="plus" class="w-3.5 h-3.5 pointer-events-none text-white" style="filter: drop-shadow(0 1px 1px rgba(0,0,0,0.7));"></i>
+                </span>
+              </label>
+              <button type="button" data-eyedropper class="swatch-sm-add pipette" title="Pick from image">
+                <i data-lucide="pipette" class="w-3.5 h-3.5 pointer-events-none"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <input type="file" id="fileInput" accept="image/*" class="hidden" />
+</div>
+
+<!-- =================== RESULT =================== -->
+<div id="resultView" class="hidden h-[100dvh] flex-col bg-neutral-950">
+
+  <header class="shrink-0 bg-neutral-900 border-b border-neutral-800 z-20">
+    <div class="h-14 px-2 sm:px-4 flex items-center justify-between gap-2">
+      <button id="btnResultHome" class="flex items-center gap-2 shrink-0 rounded-lg px-1 py-1 hover:bg-neutral-800 transition" title="Home">
+        <span class="w-8 h-8 rounded-lg grad-bg-d grid place-items-center">
+          <i data-lucide="eye-off" class="w-4 h-4 text-white"></i>
+        </span>
+        <span class="font-bold text-white tracking-tight">Redact - Image</span>
+      </button>
+
+      <div class="hidden sm:flex items-center gap-1.5 text-xs font-semibold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 rounded-full px-3 py-1">
+        <i data-lucide="check-circle" class="w-3.5 h-3.5"></i>
+        <span>Ready to save</span>
+      </div>
+
+      <div class="flex items-center gap-1.5 shrink-0">
+        <button id="btnResultBack" class="inline-flex items-center gap-1.5 border border-neutral-700 hover:bg-neutral-800 text-white text-sm font-semibold rounded-lg px-2 sm:px-3 py-2 transition">
+          <i data-lucide="pencil" class="w-4 h-4"></i>
+          <span class="hidden sm:inline">Back to edit</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <div class="flex-1 min-h-0 flex flex-col lg:flex-row">
+
+    <main class="flex-1 min-h-0 relative bg-[#0a0a0a] overflow-hidden">
+      <div class="absolute inset-0 p-4 sm:p-6 flex items-center justify-center">
+        <img id="resultImg" alt="Redacted result"
+          class="max-w-full max-h-full object-contain shadow-2xl shadow-black/80 ring-1 ring-neutral-800 bg-white cursor-zoom-in" />
+      </div>
+    </main>
+
+    <aside class="shrink-0 bg-neutral-900 lg:w-80 lg:border-l border-t lg:border-t-0 border-neutral-800 lg:overflow-y-auto max-h-[55dvh] lg:max-h-none overflow-y-auto">
+      <div class="p-4 space-y-4">
+
+        <div>
+          <label for="filenameInput" class="block text-sm font-semibold text-white mb-1.5">File name</label>
+          <div class="relative">
+            <input id="filenameInput" type="text" spellcheck="false" autocomplete="off"
+              class="w-full bg-neutral-950 border border-neutral-700 rounded-lg pl-3 pr-16 py-2.5 text-sm font-medium text-white placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-purple-500/40 focus:border-purple-500"
+              placeholder="redact-image" />
+            <span id="filenameExt" class="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-mono font-bold text-neutral-400 pointer-events-none select-none">.png</span>
+          </div>
+        </div>
+
+        <div>
+          <label for="resultFormat" class="block text-sm font-semibold text-white mb-1.5">Format</label>
+          <div class="relative">
+            <select id="resultFormat" class="w-full appearance-none bg-neutral-950 border border-neutral-700 rounded-lg pl-3 pr-9 py-2.5 text-sm font-medium text-white focus:outline-none focus:ring-2 focus:ring-purple-500/40 focus:border-purple-500">
+              <option value="image/png" selected>PNG · Lossless</option>
+              <option value="image/jpeg">JPEG · Smaller</option>
+              <option value="image/webp">WebP · Smallest</option>
+            </select>
+            <i data-lucide="chevron-down" class="w-4 h-4 absolute right-3 top-1/2 -translate-y-1/2 text-neutral-300 pointer-events-none"></i>
+          </div>
+        </div>
+
+        <div id="resultQualityGroup" class="hidden">
+          <div class="flex items-center justify-between mb-2">
+            <label for="resultQuality" class="text-sm font-semibold text-white">Quality</label>
+            <span id="resultQualityValue" class="text-xs font-mono font-bold text-white tabular-nums bg-neutral-800 px-2 py-1 rounded">92</span>
+          </div>
+          <input id="resultQuality" type="range" min="50" max="100" step="1" value="92" class="slider" />
+        </div>
+
+        <div class="rounded-lg bg-neutral-950 border border-neutral-800 p-3 flex items-center justify-between">
+          <span class="text-xs font-semibold text-neutral-200">Estimated size</span>
+          <span id="resultFilesize" class="text-xs font-mono font-bold text-white tabular-nums">—</span>
+        </div>
+
+        <button id="btnResultDownload"
+          class="w-full inline-flex items-center justify-center gap-2 grad-bg text-white text-sm font-semibold rounded-lg py-3 transition shadow-lg shadow-purple-500/20">
+          <i data-lucide="download" class="w-4 h-4"></i>
+          Download
+        </button>
+
+        <button id="btnResultCopy"
+          class="hidden lg:inline-flex w-full items-center justify-center gap-2 border border-neutral-700 hover:bg-neutral-800 text-white text-sm font-semibold rounded-lg py-2.5 transition">
+          <i data-lucide="copy" class="w-4 h-4"></i>
+          Copy to clipboard
+        </button>
+
+        <div class="grid grid-cols-2 gap-2 pt-3 border-t border-neutral-800">
+          <button id="btnResultBack2"
+            class="inline-flex items-center justify-center gap-1.5 border border-neutral-700 hover:bg-neutral-800 text-white text-sm font-semibold rounded-lg py-2.5 transition">
+            <i data-lucide="pencil" class="w-4 h-4"></i>
+            Edit
+          </button>
+          <button id="btnResultHome2"
+            class="inline-flex items-center justify-center gap-1.5 border border-neutral-700 hover:bg-neutral-800 text-white text-sm font-semibold rounded-lg py-2.5 transition">
+            <i data-lucide="home" class="w-4 h-4"></i>
+            Home
+          </button>
+        </div>
+
+        <p class="text-xs text-neutral-300 leading-relaxed pt-2">
+          <i data-lucide="lock" class="w-3 h-3 inline -mt-0.5 mr-1"></i>
+          Your image was never uploaded to any server.
+        </p>
+      </div>
+    </aside>
+  </div>
+
+  <!-- Lightbox -->
+  <div id="lightbox" class="hidden fixed inset-0 z-[80] bg-black/95 backdrop-blur-sm items-center justify-center p-3 sm:p-6">
+    <button id="lightboxClose" type="button" aria-label="Close"
+      class="absolute top-3 right-3 sm:top-5 sm:right-5 w-10 h-10 rounded-full bg-white/10 hover:bg-white/25 text-white grid place-items-center transition">
+      <i data-lucide="x" class="w-5 h-5 pointer-events-none"></i>
+    </button>
+    <img id="lightboxImg" alt="Enlarged result"
+      class="max-w-full max-h-full object-contain select-none" />
+  </div>
+</div>
+
+<style>
+  .no-scrollbar::-webkit-scrollbar { display: none; }
+  .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+</style>
+
+<script src="./app.js"></script>
+<script>lucide.createIcons();</script>
+<script>
+    if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("./service-worker.js")
+      .then(registration => {
+        console.log("Service Worker registered:", registration.scope);
+      })
+      .catch(error => {
+        console.error("Service Worker registration failed:", error);
+      });
+  });
+}
+</script>
+</body>
+</html>

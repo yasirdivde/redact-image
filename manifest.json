@@ -1,0 +1,23 @@
+{
+  "name": "redact-image",
+  "short_name": "redact-image",
+  "description": "redact-image - Free and Private in-Browser Image Redaction. Blur, mosiac, or solid bar over sensitive information in images. No uploads, no tracking, no ads.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#ffffff",
+  "theme_color": "#111111",
+  "icons": [
+    {
+      "src": "./images/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "./images/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
