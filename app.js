@@ -27,10 +27,6 @@
   const filenameInput      = document.getElementById('filenameInput');
   const filenameExt        = document.getElementById('filenameExt');
   const resultFormat       = document.getElementById('resultFormat');
-  const resultQuality      = document.getElementById('resultQuality');
-  const resultQualityVal   = document.getElementById('resultQualityValue');
-  const resultQualityGroup = document.getElementById('resultQualityGroup');
-  const resultFilesize     = document.getElementById('resultFilesize');
   const btnResultDownload  = document.getElementById('btnResultDownload');
   const btnResultCopy      = document.getElementById('btnResultCopy');
 
@@ -46,6 +42,7 @@
   const EXPORT_EXTRA_NOISE     = 5;
   const BLUR_SAFE_MIN          = 12;
   const MOSAIC_SAFE_MIN        = 10;
+  const EXPORT_QUALITY         = 0.98; // fixed quality for JPEG / WebP (PNG ignores it)
 
   /* ---------------- State ---------------- */
   const state = {
@@ -56,7 +53,7 @@
     mosaicSize: 12,
     color: '#000000',
     format: 'image/png',
-    quality: 0.92,
+    quality: EXPORT_QUALITY,
 
     drawing: false,
     pickingColor: false,
@@ -91,10 +88,6 @@
 
   let previewRAF = null;
   let previewHideTimer = null;
-  let sizeComputeToken = 0;
-
-  let sizeProxyCanvas = null;
-  const sizeCache = new Map();
 
   /* ---------------- Gradient ring style injection ---------------- */
   (function injectRingStyles() {
@@ -132,6 +125,21 @@
   canvas.parentElement.appendChild(previewEl);
 
   /* ============================================================
+     View enter animation helper
+     ------------------------------------------------
+     Removes any prior animation class, forces a reflow so the
+     browser registers the removal, then adds the class again so
+     the CSS keyframes re-run every time the view is shown.
+     ============================================================ */
+  function animateIn(el, cls) {
+    if (!el) return;
+    el.classList.remove('view-enter', 'fade-in-enter');
+    // Force a synchronous reflow to commit the removal.
+    void el.offsetWidth;
+    el.classList.add(cls);
+  }
+
+  /* ============================================================
      Visual scale helper
      ------------------------------------------------
      Canvas pixels per screen pixel, accounting for any CSS
@@ -155,6 +163,7 @@
     resultView.classList.add('hidden');
     resultView.classList.remove('flex');
     window.scrollTo(0, 0);
+    animateIn(landingView, 'view-enter');
     requestAnimationFrame(refreshIcons);
   }
 
@@ -166,6 +175,7 @@
     appView.classList.remove('hidden');
     appView.classList.add('flex');
     window.scrollTo(0, 0);
+    animateIn(appView, 'view-enter');
     requestAnimationFrame(() => {
       refreshIcons();
       fitCanvasToViewport();
@@ -188,7 +198,6 @@
 
     if (!filenameInput.value) filenameInput.value = defaultFilename();
     updateResultFilenameExt();
-    updateResultSize();
 
     closeLightbox();
     landingView.classList.add('hidden');
@@ -197,6 +206,8 @@
     resultView.classList.remove('hidden');
     resultView.classList.add('flex');
     window.scrollTo(0, 0);
+    // Opacity-only: safe for the position:fixed lightbox inside.
+    animateIn(resultView, 'fade-in-enter');
     requestAnimationFrame(refreshIcons);
   }
 
@@ -233,12 +244,6 @@
       x: Math.max(0, Math.min(1, fx)) * canvas.width,
       y: Math.max(0, Math.min(1, fy)) * canvas.height,
     };
-  }
-
-  function formatBytes(n) {
-    if (n < 1024) return n + ' B';
-    if (n < 1024 * 1024) return (n / 1024).toFixed(1) + ' KB';
-    return (n / 1024 / 1024).toFixed(2) + ' MB';
   }
 
   function refreshIcons() {
@@ -328,78 +333,6 @@
     const mosaicRisky = state.tool === 'mosaic' && state.mosaicSize   < MOSAIC_SAFE_MIN;
     qAll('[data-blur-warning]').forEach((el)   => el.classList.toggle('hidden', !blurRisky));
     qAll('[data-mosaic-warning]').forEach((el) => el.classList.toggle('hidden', !mosaicRisky));
-  }
-
-  /* ============================================================
-     Size estimation (cached proxy + per-format cache)
-     ============================================================ */
-  function invalidateSizeCache() {
-    sizeCache.clear();
-    sizeProxyCanvas = null;
-  }
-
-  function getSizeProxy() {
-    if (sizeProxyCanvas) return sizeProxyCanvas;
-    const sw = canvas.width, sh = canvas.height;
-    if (!sw || !sh) return null;
-    const PROXY_MAX = 320;
-    const scale = Math.min(1, PROXY_MAX / Math.max(sw, sh));
-    if (scale >= 1) return null;
-    const pw = Math.max(1, Math.round(sw * scale));
-    const ph = Math.max(1, Math.round(sh * scale));
-    const p = document.createElement('canvas');
-    p.width = pw; p.height = ph;
-    const pctx = p.getContext('2d');
-    pctx.imageSmoothingEnabled = true;
-    pctx.imageSmoothingQuality = 'high';
-    pctx.drawImage(canvas, 0, 0, sw, sh, 0, 0, pw, ph);
-    sizeProxyCanvas = p;
-    return p;
-  }
-
-  function estimateBlobSize(format, quality) {
-    return new Promise((resolve) => {
-      const key = format + '|' + quality.toFixed(3);
-      if (sizeCache.has(key)) { resolve(sizeCache.get(key)); return; }
-
-      const proxy = getSizeProxy();
-      const source = proxy || canvas;
-      const sw = canvas.width, sh = canvas.height;
-      const pw = source.width, ph = source.height;
-
-      source.toBlob((blob) => {
-        if (!blob) { resolve(null); return; }
-        let est;
-        if (pw === sw && ph === sh) {
-          est = blob.size;
-        } else {
-          const ratio = (sw * sh) / (pw * ph);
-          const exp = format === 'image/png' ? 1.0 : 0.82;
-          est = Math.max(1, Math.round(blob.size * Math.pow(ratio, exp)));
-        }
-        sizeCache.set(key, est);
-        resolve(est);
-      }, format, quality);
-    });
-  }
-
-  function updateResultSize() {
-    if (!state.hasImage) { resultFilesize.textContent = '—'; return; }
-
-    const myToken = ++sizeComputeToken;
-    const key = state.format + '|' + state.quality.toFixed(3);
-
-    if (sizeCache.has(key)) {
-      resultFilesize.textContent = '≈ ' + formatBytes(sizeCache.get(key));
-      return;
-    }
-
-    resultFilesize.textContent = '…';
-
-    estimateBlobSize(state.format, state.quality).then((bytes) => {
-      if (myToken !== sizeComputeToken) return;
-      resultFilesize.textContent = bytes != null ? '≈ ' + formatBytes(bytes) : '—';
-    });
   }
 
   /* ============================================================
@@ -497,7 +430,6 @@
     restoreToken = 0;
     state.history = [];
     state.historyIndex = -1;
-    invalidateSizeCache();
 
     zoom.scale = 1; zoom.tx = 0; zoom.ty = 0;
     applyZoom();
@@ -537,8 +469,6 @@
 
   function pushHistory() {
     if (!state.hasImage) return;
-
-    invalidateSizeCache();
 
     const snap = document.createElement('canvas');
     snap.width = canvas.width;
@@ -1268,7 +1198,6 @@
       canvas.style.width = ''; canvas.style.height = '';
       state.history = []; state.historyIndex = -1;
       historyChain = Promise.resolve();
-      invalidateSizeCache();
 
       resetZoom();
       setTool(null);
@@ -1288,16 +1217,7 @@
 
   resultFormat.addEventListener('change', () => {
     state.format = resultFormat.value;
-    const needs = state.format !== 'image/png';
-    resultQualityGroup.classList.toggle('hidden', !needs);
     updateResultFilenameExt();
-    updateResultSize();
-  });
-
-  resultQuality.addEventListener('input', () => {
-    state.quality = Number(resultQuality.value) / 100;
-    resultQualityVal.textContent = resultQuality.value;
-    updateResultSize();
   });
 
   function cleanFilenameInput() {
@@ -1349,6 +1269,7 @@
     lightboxImg.src = resultImg.src;
     lightbox.classList.remove('hidden');
     lightbox.classList.add('flex');
+    animateIn(lightbox, 'fade-in-enter');
     document.body.style.overflow = 'hidden';
     requestAnimationFrame(refreshIcons);
   }
